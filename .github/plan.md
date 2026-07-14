@@ -29,7 +29,7 @@ VS Code Agent Mode + copilot-instructions.md
     │   └─→ full file context for each changed file
     ↓
     ├─→ 6-Pass Review Analysis (in-context, no tool calls)
-    │   ├─→ Pass 1: Jira Compliance
+    │   ├─→ Pass 1: ADO Compliance
     │   ├─→ Pass 2: Functional Bugs
     │   ├─→ Pass 3: Security Review
     │   ├─→ Pass 4: Performance Review
@@ -45,15 +45,15 @@ VS Code Agent Mode + copilot-instructions.md
 ## Files Created
 
 ### 1. `.vscode/mcp.json`
-**Purpose**: Configure MCP servers for GitHub and Jira
+**Purpose**: Configure MCP servers for GitHub and Azure DevOps
 
 **Content**:
 - GitHub server: remote HTTP, OAuth at `https://api.githubcopilot.com/mcp/`
-- Jira server: local stdio via `uvx mcp-atlassian`
-- VS Code inputs: prompt for JIRA_URL, JIRA_USERNAME, JIRA_API_TOKEN securely
+- ADO server: remote HTTP, OAuth at `https://mcp.dev.azure.com/{org}` (Microsoft-hosted)
+- VS Code input: prompt for ADO organization name only (no secrets)
 - Allowed tools from GitHub: `get_pull_request`, `get_pull_request_files`, `get_file_contents`, `create_pull_request_review`, `list_pull_requests`
 
-**Why**: Keeps the tool list small (focused); GitHub OAuth requires no PAT storage; Jira credentials are prompted interactively and never stored in the file.
+**Why**: Both servers are remote and OAuth-based — no credentials to store, no local processes to run.
 
 ### 2. `.env.example`
 **Purpose**: Document that the ADO remote MCP server uses OAuth (no secrets needed)
@@ -151,13 +151,13 @@ You are a Staff-level Software Engineer and Code Reviewer with expertise in:
 
 ```
 When a user provides:
-"Review PR: https://github.com/org/repo/pull/123 against Jira: PROJ-456"
+"Review PR: https://github.com/org/repo/pull/123 against ADO: 4567"
 
 Extract:
 - owner: org
 - repo: repo
 - pullNumber: 123
-- jiraTicketId: PROJ-456
+- adoWorkItemId: 4567
 ```
 
 #### Workflow (Sequential)
@@ -199,9 +199,9 @@ Extract:
 
 5. **Run 6 Review Passes** (in-context, no tool calls)
 
-   **Pass 1: Jira Compliance**
+   **Pass 1: ADO Compliance**
    ```
-   For each acceptance criterion:
+   For each acceptance criterion from the ADO work item:
      1. Find implementation in changed code
      2. Determine: Fully Implemented / Partially Implemented / Missing
      3. If not fully implemented:
@@ -304,7 +304,7 @@ Extract:
    [Code snippet showing the fix]
    ```
    
-   **Acceptance Criterion**: This addresses AC #3 from PROJ-456
+   **Acceptance Criterion**: This addresses AC #3 from ADO #4567
    ----
 
    Or for warnings:
@@ -376,7 +376,7 @@ code --version
   Review PR: https://github.com/owner/repo/pull/123 against ADO: 4567
   ```
 - Agent should:
-  1. Fetch Jira ticket (shows in chat)
+  1. Fetch ADO work item (shows in chat)
   2. Fetch PR files (shows in chat)
   3. Analyze code (shows 6 passes in chat)
   4. Create review comments (shows API call output)
@@ -389,7 +389,7 @@ code --version
   - Severity emoji (🔴 / 🟡 / 🔵)
   - File + line number
   - Explanation + fix suggestion
-  - Link to Jira AC (if applicable)
+  - Link to ADO work item AC (if applicable)
 
 ---
 
